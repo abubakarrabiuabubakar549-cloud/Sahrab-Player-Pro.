@@ -1,0 +1,54 @@
+name: Build SAHRAB PLAYER PRO APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Check project files
+        run: |
+          echo "Checking repository files..."
+          ls -la
+          find . -maxdepth 3 -type f | head -100
+
+      - name: Build APK if Gradle project exists
+        run: |
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          elif [ -f "./SahrabAI_Android/gradlew" ]; then
+            cd SahrabAI_Android
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          else
+            echo "ERROR: Android Gradle project not found."
+            echo "Upload the Android project files before building."
+            exit 1
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SAHRAB-PLAYER-PRO-APK
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            SahrabAI_Android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
